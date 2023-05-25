@@ -13,28 +13,6 @@
 #define PCIE_SEGMENT_PCIE30X1           1
 #define PCIE_SEGMENT_PCIE30X2           2
 
-#define PCIE2X1_APB                     0xFE260000
-#define PCIE3X1_APB                     0xFE270000
-#define PCIE3X2_APB                     0xFE280000
-
-#define PIPE_PHY0                       0xFE820000
-#define PIPE_PHY1                       0xFE830000
-#define PIPE_PHY2                       0xFE840000
-
-#define PCIE30_PHY                      0xFE8C0000 /* 128KB */
-
-#define PCIE2X1_S                       0x300000000UL /* 1024MB */
-#define PCIE3X1_S                       0x340000000UL /* 1024MB */
-#define PCIE3X2_S                       0x380000000UL /* 1024MB */
-
-#define PCIE2X1_DBI                     0x3C0000000 /* 4MB */
-#define PCIE3X1_DBI                     0x3C0400000 /* 4MB */
-#define PCIE3X2_DBI                     0x3C0800000 /* 4MB */
-
-#define PCIE2X1_SEGMENT                 ((PCIE2X1_S - 0x300000000UL) / 0x40000000UL)
-#define PCIE3X1_SEGMENT                 ((PCIE3X1_S - 0x300000000UL) / 0x40000000UL)
-#define PCIE3X2_SEGMENT                 ((PCIE3X2_S - 0x300000000UL) / 0x40000000UL)
-
 
 EFI_STATUS
 InitializePciHost (

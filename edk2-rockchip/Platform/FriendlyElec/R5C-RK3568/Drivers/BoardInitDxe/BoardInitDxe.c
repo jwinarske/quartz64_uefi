@@ -370,20 +370,37 @@ BoardInitDriverEntryPoint (
   )
 {
   DEBUG ((DEBUG_INFO, "BOARD: BoardInitDriverEntryPoint() called\n"));
-
+  /*
+  * There are 10 independent IO domains in RK3566/RK3568, including PMUIO[0:2] and VCCIO[1:7].
+  * 1/ PMUIO0 and PMUIO1 are fixed-level power domains which cannot be configured;
+  * 2/ PMUIO2 and VCCIO1,VCCIO[3:7] domains require that their hardware power supply voltages
+  *    must be consistent with the software configuration correspondingly
+  *	a/ When the hardware IO level is connected to 1.8V, the software voltage configuration
+  *	   should also be configured to 1.8V accordingly;
+  *	b/ When the hardware IO level is connected to 3.3V, the software voltage configuration
+  *	   should also be configured to 3.3V accordingly;
+  * 3/ VCCIO2 voltage control selection (0xFDC20140)
+  *	BIT[0]: 0x0: from GPIO_0A7 (default)
+  *	BIT[0]: 0x1: from GRF
+  *    Default is determined by Pin FLASH_VOL_SEL/GPIO0_A7:
+  *	L:VCCIO2 must supply 3.3V
+  *	H:VCCIO2 must supply 1.8V
+  */
   SocSetDomainVoltage (PMUIO2, VCC_3V3);
   SocSetDomainVoltage (VCCIO1, VCC_3V3);
-  SocSetDomainVoltage (VCCIO2, VCC_1V8);
+  if (GpioPinRead(0, GPIO_PIN_PA7)) {
+    DEBUG((DEBUG_INFO, "FLASH_VOL_SEL/GPIO0_A7 HIGH, VCCIO2 == VCC_1V8"));
+    SocSetDomainVoltage (VCCIO2, VCC_1V8);
+  }
+  else {
+    DEBUG((DEBUG_INFO, "FLASH_VOL_SEL/GPIO0_A7 LOW, VCCIO2 == VCC_3V3"));
+    SocSetDomainVoltage (VCCIO2, VCC_3V3);
+  }
   SocSetDomainVoltage (VCCIO3, VCC_3V3);
   SocSetDomainVoltage (VCCIO4, VCC_1V8);
   SocSetDomainVoltage (VCCIO5, VCC_3V3);
   SocSetDomainVoltage (VCCIO6, VCC_1V8);
   SocSetDomainVoltage (VCCIO7, VCC_3V3);
-
-  /* Set FLASH_VOL_SEL - VCCIO2=1.8V */
-  //GpioPinSetPull (0, GPIO_PIN_PA7, GPIO_PIN_PULL_NONE);
-  //GpioPinSetDirection (0, GPIO_PIN_PA7, GPIO_PIN_OUTPUT);
-  //GpioPinWrite (0, GPIO_PIN_PA7, FALSE);
 
   BoardInitPmic ();
   BoardInitRtc ();

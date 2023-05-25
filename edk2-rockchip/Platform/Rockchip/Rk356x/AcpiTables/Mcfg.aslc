@@ -12,8 +12,8 @@
 #include <IndustryStandard/Rk356x.h>
 #include "AcpiHeader.h"
 
-#define PCIE_BASE                       FixedPcdGet64 (PcdPciExpressBaseAddress)
-#define PCIE_SEGMENT                    ((PCIE_BASE - 0x300000000UL) / 0x40000000UL)
+//#define PCIE_BASE                       FixedPcdGet64 (PcdPciExpressBaseAddress)
+//#define PCIE_SEGMENT                    ((PCIE_BASE - 0x300000000UL) / 0x40000000UL)
 
 #pragma pack(push, 1)
 
@@ -29,13 +29,34 @@ EFI_ACPI_MEMORY_MAPPED_CONFIGURATION_SPACE_ACCESS_DESCRIPTION_TABLE Mcfg = {
             EFI_ACPI_MEMORY_MAPPED_CONFIGURATION_SPACE_ACCESS_DESCRIPTION_TABLE,
             EFI_ACPI_MEMORY_MAPPED_CONFIGURATION_SPACE_ACCESS_TABLE_REVISION
             ),
-    }, {
-        PCIE_BASE + 0x8000,
-        PCIE_SEGMENT,  // PciSegmentGroupNumber
+    }
+#if (FixedPcdGet32(PciHostBridge2x1Enable) == 1)
+    ,{
+        PCIE2X1_S_BASE + 0x8000,
+        PCIE2X1_SEGMENT, // PciSegmentGroupNumber
         1,             // PciBusMin
         1,             // PciBusMax
         0              // Reserved
     }
+#endif
+#if (FixedPcdGet32(PciHostBridge3x1Enable) == 1)
+    ,{
+        PCIE3X1_S_BASE + 0x8000,
+        PCIE3X1_SEGMENT, // PciSegmentGroupNumber
+        1,             // PciBusMin
+        1,             // PciBusMax
+        0              // Reserved
+    }
+#endif
+#if (FixedPcdGet32(PciHostBridge3x2Enable) == 1)
+    ,{
+        PCIE3X2_S_BASE + 0x8000,
+        PCIE3X2_SEGMENT, // PciSegmentGroupNumber
+        1,             // PciBusMin
+        1,             // PciBusMax
+        0              // Reserved
+    }
+#endif
 };
 
 #pragma pack(pop)

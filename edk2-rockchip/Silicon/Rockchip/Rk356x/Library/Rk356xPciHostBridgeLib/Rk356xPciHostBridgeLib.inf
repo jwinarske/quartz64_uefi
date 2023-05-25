@@ -54,12 +54,26 @@
   gArmTokenSpaceGuid.PcdPciMmio64Base
   gArmTokenSpaceGuid.PcdPciMmio64Size
   gEfiMdePkgTokenSpaceGuid.PcdPciMmio64Translation
-  gRk356xTokenSpaceGuid.PcdPcieResetGpioBank
-  gRk356xTokenSpaceGuid.PcdPcieResetGpioPin
-  gRk356xTokenSpaceGuid.PcdPciePowerGpioBank
-  gRk356xTokenSpaceGuid.PcdPciePowerGpioPin
-  gRk356xTokenSpaceGuid.PcdPcieLinkSpeed
-  gRk356xTokenSpaceGuid.PcdPcieNumLanes
-  gRk356xTokenSpaceGuid.PcdPcieApbBase
-  gRk356xTokenSpaceGuid.PcdPcieDbiBase
   gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress
+  gRk356xTokenSpaceGuid.PciHostBridgeCount
+  gRk356xTokenSpaceGuid.PciHostBridge2x1Enable
+  gRk356xTokenSpaceGuid.PciHostBridge2x1NumLanes
+  gRk356xTokenSpaceGuid.PciHostBridge2x1LinkSpeed
+  gRk356xTokenSpaceGuid.PciHostBridge2x1PowerGpioBank
+  gRk356xTokenSpaceGuid.PciHostBridge2x1PowerGpioPin
+  gRk356xTokenSpaceGuid.PciHostBridge2x1ResetGpioBank
+  gRk356xTokenSpaceGuid.PciHostBridge2x1ResetGpioPin
+  gRk356xTokenSpaceGuid.PciHostBridge3x1Enable
+  gRk356xTokenSpaceGuid.PciHostBridge3x1NumLanes
+  gRk356xTokenSpaceGuid.PciHostBridge3x1LinkSpeed
+  gRk356xTokenSpaceGuid.PciHostBridge3x1PowerGpioBank
+  gRk356xTokenSpaceGuid.PciHostBridge3x1PowerGpioPin
+  gRk356xTokenSpaceGuid.PciHostBridge3x1ResetGpioBank
+  gRk356xTokenSpaceGuid.PciHostBridge3x1ResetGpioPin
+  gRk356xTokenSpaceGuid.PciHostBridge3x2Enable
+  gRk356xTokenSpaceGuid.PciHostBridge3x2NumLanes
+  gRk356xTokenSpaceGuid.PciHostBridge3x2LinkSpeed
+  gRk356xTokenSpaceGuid.PciHostBridge3x2PowerGpioBank
+  gRk356xTokenSpaceGuid.PciHostBridge3x2PowerGpioPin
+  gRk356xTokenSpaceGuid.PciHostBridge3x2ResetGpioBank
+  gRk356xTokenSpaceGuid.PciHostBridge3x2ResetGpioPin

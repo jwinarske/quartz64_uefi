@@ -2,6 +2,7 @@
 
   Copyright 2017, 2020 NXP
   Copyright 2021-2023, Jared McNeill <jmcneill@invisible.ca>
+  Copyright 2023, Joel Winarske <joel.winarske@gmail.com>
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -330,8 +331,9 @@ InitializePciHost (
   UINT64                   PciIoSize;
 
   /* Log settings */
+  DEBUG ((DEBUG_INFO, "** InitializePciHost **\n"));
+  DEBUG ((DEBUG_INFO, "PCIe: BaseAddress 0x%lx\n", BaseAddress));
   DEBUG ((DEBUG_INFO, "PCIe: Segment %u\n", PcieSegment));
-  DEBUG ((DEBUG_INFO, "PCIe: PciExpressBaseAddress 0x%lx\n", BaseAddress));
   DEBUG ((DEBUG_INFO, "PCIe: ApbBase 0x%lx\n", ApbBase));
   DEBUG ((DEBUG_INFO, "PCIe: DbiBase 0x%lx\n", DbiBase));
   DEBUG ((DEBUG_INFO, "PCIe: NumLanes %u\n", NumLanes));

@@ -52,19 +52,33 @@
   gRk356xTokenSpaceGuid.PcdEmmcDxeBaseAddress|0xFE310000|UINT32|0x00000020
   gRk356xTokenSpaceGuid.PcdEmmcForceHighSpeed|FALSE|BOOLEAN|0x00000021
   # Pcds for PCIe
-  gRk356xTokenSpaceGuid.PcdPcieResetGpioBank|0xFF|UINT8|0x00000030
-  gRk356xTokenSpaceGuid.PcdPcieResetGpioPin|0xFF|UINT8|0x00000031
-  gRk356xTokenSpaceGuid.PcdPciePowerGpioBank|0xFF|UINT8|0x00000032
-  gRk356xTokenSpaceGuid.PcdPciePowerGpioPin|0xFF|UINT8|0x00000033
-  gRk356xTokenSpaceGuid.PcdPcieLinkSpeed|0x2|UINT32|0x00000034
-  gRk356xTokenSpaceGuid.PcdPcieNumLanes|0x1|UINT32|0x00000035
-  gRk356xTokenSpaceGuid.PcdPcieApbBase|0xFE260000|UINT64|0x00000036
-  gRk356xTokenSpaceGuid.PcdPcieDbiBase|0x3C0000000|UINT64|0x00000037
+  gRk356xTokenSpaceGuid.PciHostBridgeCount|3|UINT32|0x00000030
+  gRk356xTokenSpaceGuid.PciHostBridge2x1Enable|1|UINT32|0x00000031
+  gRk356xTokenSpaceGuid.PciHostBridge2x1NumLanes|1|UINT32|0x00000032
+  gRk356xTokenSpaceGuid.PciHostBridge2x1LinkSpeed|2|UINT32|0x00000033
+  gRk356xTokenSpaceGuid.PciHostBridge2x1PowerGpioBank|0xFF|UINT32|0x00000034
+  gRk356xTokenSpaceGuid.PciHostBridge2x1PowerGpioPin|0|UINT32|0x00000035
+  gRk356xTokenSpaceGuid.PciHostBridge2x1ResetGpioBank|3|UINT32|0x00000036
+  gRk356xTokenSpaceGuid.PciHostBridge2x1ResetGpioPin|7|UINT32|0x00000037
+  gRk356xTokenSpaceGuid.PciHostBridge3x1Enable|1|UINT32|0x00000038
+  gRk356xTokenSpaceGuid.PciHostBridge3x1NumLanes|1|UINT32|0x00000039
+  gRk356xTokenSpaceGuid.PciHostBridge3x1LinkSpeed|3|UINT32|0x0000003A
+  gRk356xTokenSpaceGuid.PciHostBridge3x1PowerGpioBank|0xFF|UINT32|0x0000003B
+  gRk356xTokenSpaceGuid.PciHostBridge3x1PowerGpioPin|0|UINT32|0x0000003C
+  gRk356xTokenSpaceGuid.PciHostBridge3x1ResetGpioBank|0|UINT32|0x0000003D
+  gRk356xTokenSpaceGuid.PciHostBridge3x1ResetGpioPin|0|UINT32|0x0000003E
+  gRk356xTokenSpaceGuid.PciHostBridge3x2Enable|1|UINT32|0x0000003F
+  gRk356xTokenSpaceGuid.PciHostBridge3x2NumLanes|2|UINT32|0x00000040
+  gRk356xTokenSpaceGuid.PciHostBridge3x2LinkSpeed|3|UINT32|0x00000041
+  gRk356xTokenSpaceGuid.PciHostBridge3x2PowerGpioBank|0xFF|UINT32|0x00000042
+  gRk356xTokenSpaceGuid.PciHostBridge3x2PowerGpioPin|0|UINT32|0x00000043
+  gRk356xTokenSpaceGuid.PciHostBridge3x2ResetGpioBank|0|UINT32|0x00000044
+  gRk356xTokenSpaceGuid.PciHostBridge3x2ResetGpioPin|14|UINT32|0x00000045
   # Pcds for RTC
-  gRk356xTokenSpaceGuid.PcdRtcI2cBusBase|0|UINT32|0x00000040
-  gRk356xTokenSpaceGuid.PcdRtcI2cAddr|0|UINT8|0x00000041
+  gRk356xTokenSpaceGuid.PcdRtcI2cBusBase|0|UINT32|0x00000050
+  gRk356xTokenSpaceGuid.PcdRtcI2cAddr|0|UINT8|0x00000051
   # Pcds for SAR-ADC
-  gRk356xTokenSpaceGuid.PcdSarAdcBase|0xFE720000|UINT32|0x00000050
+  gRk356xTokenSpaceGuid.PcdSarAdcBase|0xFE720000|UINT32|0x00000052
   # Pcds for Pcie30Phy
   gRk356xTokenSpaceGuid.PcdPcie30PhyLane0LinkNum|1|UINT8|0x00000060
   gRk356xTokenSpaceGuid.PcdPcie30PhyLane1LinkNum|1|UINT8|0x00000061

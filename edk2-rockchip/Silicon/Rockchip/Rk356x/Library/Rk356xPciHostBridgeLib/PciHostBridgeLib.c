@@ -1,6 +1,7 @@
 /** @file
   PCI Host Bridge Library instance for Rockchip Rk356x
 
+  Copyright (c) 2023, Joel Winarske <joel.winarske@gmail.com>
   Copyright (c) 2021, Jared McNeill <jmcneill@invisible.ca>
   Copyright (c) 2016, Linaro Ltd. All rights reserved.<BR>
 
@@ -12,11 +13,13 @@
 #include <Library/DebugLib.h>
 #include <Library/DevicePathLib.h>
 #include <Library/MemoryAllocationLib.h>
+#include <Library/BaseMemoryLib.h>
 #include <Library/PcdLib.h>
 
 #include <Protocol/PciRootBridgeIo.h>
 #include <Protocol/PciHostBridgeResourceAllocation.h>
 
+#include <IndustryStandard/Rk356x.h>
 #include "PciHostBridgeInit.h"
 
 
@@ -27,77 +30,76 @@ typedef struct {
 } EFI_PCI_ROOT_BRIDGE_DEVICE_PATH;
 #pragma pack ()
 
-
-STATIC EFI_PCI_ROOT_BRIDGE_DEVICE_PATH mEfiPciRootBridgeDevicePath[3] = {
+STATIC EFI_PCI_ROOT_BRIDGE_DEVICE_PATH mDevicePathTemplate = {
   {
     {
+      ACPI_DEVICE_PATH,
+      ACPI_DP,
       {
-        ACPI_DEVICE_PATH,
-        ACPI_DP,
-        {
-          (UINT8) (sizeof(ACPI_HID_DEVICE_PATH)),
-          (UINT8) ((sizeof(ACPI_HID_DEVICE_PATH)) >> 8)
-        }
-      },
-      EISA_PNP_ID(0x0A08), // PCI Express
+        (UINT8) (sizeof(ACPI_HID_DEVICE_PATH)),
+        (UINT8) ((sizeof(ACPI_HID_DEVICE_PATH)) >> 8)
+      }
+    },
+    EISA_PNP_ID(0x0A08), // PCI Express
+    0
+  },
+  {
+    END_DEVICE_PATH_TYPE,
+    END_ENTIRE_DEVICE_PATH_SUBTYPE,
+    {
+      END_DEVICE_PATH_LENGTH,
       0
-    },
-
-    {
-      END_DEVICE_PATH_TYPE,
-      END_ENTIRE_DEVICE_PATH_SUBTYPE,
-      {
-        END_DEVICE_PATH_LENGTH,
-        0
-      }
-    }
-  },
-  {
-    {
-      {
-        ACPI_DEVICE_PATH,
-        ACPI_DP,
-        {
-          (UINT8) (sizeof(ACPI_HID_DEVICE_PATH)),
-          (UINT8) ((sizeof(ACPI_HID_DEVICE_PATH)) >> 8)
-        }
-      },
-      EISA_PNP_ID(0x0A08), // PCI Express
-      1
-    },
-
-    {
-      END_DEVICE_PATH_TYPE,
-      END_ENTIRE_DEVICE_PATH_SUBTYPE,
-      {
-        END_DEVICE_PATH_LENGTH,
-        0
-      }
-    }
-  },
-  {
-    {
-      {
-        ACPI_DEVICE_PATH,
-        ACPI_DP,
-        {
-          (UINT8) (sizeof(ACPI_HID_DEVICE_PATH)),
-          (UINT8) ((sizeof(ACPI_HID_DEVICE_PATH)) >> 8)
-        }
-      },
-      EISA_PNP_ID(0x0A08), // PCI Express
-      2
-    },
-
-    {
-      END_DEVICE_PATH_TYPE,
-      END_ENTIRE_DEVICE_PATH_SUBTYPE,
-      {
-        END_DEVICE_PATH_LENGTH,
-        0
-      }
     }
   }
+};
+
+STATIC PCI_ROOT_BRIDGE mRootBridgeTemplate = {
+  0,
+  .Supports    = EFI_PCI_ATTRIBUTE_IDE_PRIMARY_IO |
+                  EFI_PCI_ATTRIBUTE_IDE_SECONDARY_IO |
+                  EFI_PCI_ATTRIBUTE_ISA_IO_16 |
+                  EFI_PCI_ATTRIBUTE_ISA_MOTHERBOARD_IO |
+                  EFI_PCI_ATTRIBUTE_VGA_MEMORY |
+                  EFI_PCI_ATTRIBUTE_VGA_IO_16  |
+                  EFI_PCI_ATTRIBUTE_VGA_PALETTE_IO_16,
+  .Attributes  = EFI_PCI_ATTRIBUTE_IDE_PRIMARY_IO |
+                  EFI_PCI_ATTRIBUTE_IDE_SECONDARY_IO |
+                  EFI_PCI_ATTRIBUTE_ISA_IO_16 |
+                  EFI_PCI_ATTRIBUTE_ISA_MOTHERBOARD_IO |
+                  EFI_PCI_ATTRIBUTE_VGA_MEMORY |
+                  EFI_PCI_ATTRIBUTE_VGA_IO_16  |
+                  EFI_PCI_ATTRIBUTE_VGA_PALETTE_IO_16,
+  .DmaAbove4G            = TRUE,
+  .NoExtendedConfigSpace = FALSE,
+  .ResourceAssigned      = FALSE,
+  .AllocationAttributes  = EFI_PCI_HOST_BRIDGE_COMBINE_MEM_PMEM |
+                            EFI_PCI_HOST_BRIDGE_MEM64_DECODE,
+  {
+    FixedPcdGet32 (PcdPciBusMin),
+    FixedPcdGet32 (PcdPciBusMax),
+    0
+  },
+  {
+    FixedPcdGet64 (PcdPciIoBase),
+    (FixedPcdGet64 (PcdPciIoBase) + FixedPcdGet64 (PcdPciIoSize) - 1),
+    (MAX_UINT64 - FixedPcdGet64 (PcdPciIoTranslation) + 1)
+  },
+  {
+    FixedPcdGet32 (PcdPciMmio32Base),
+    (FixedPcdGet32 (PcdPciMmio32Base) + FixedPcdGet32 (PcdPciMmio32Size) - 1),
+    0
+  },
+  {
+    FixedPcdGet64 (PcdPciMmio64Base),
+    (FixedPcdGet64 (PcdPciMmio64Base) + FixedPcdGet64 (PcdPciMmio64Size) - 1),
+    0,
+  },
+  //
+  // No separate ranges for prefetchable and non-prefetchable BARs
+  //
+  { MAX_UINT64, 0, 0 },
+  { MAX_UINT64, 0, 0 },
+  NULL
 };
 
 GLOBAL_REMOVE_IF_UNREFERENCED
@@ -122,170 +124,98 @@ PciHostBridgeGetRootBridges (
 {
   PCI_ROOT_BRIDGE     *RootBridge;
   EFI_STATUS          Status;
+  INTN Config[3] = { 0 };
 
-  Status = InitializePciHost (
-    PCIE2X1_APB,
-    PCIE2X1_DBI,
-    PCIE2X1_SEGMENT,
-    PCIE2X1_S,
-    1, 2,
-    0xFFU, 0, /* always powered on */
-    3, 17
-  );
-  if (EFI_ERROR (Status)) {
-    *Count = 0;
-    return NULL;
+  if (FixedPcdGet32 (PciHostBridge2x1Enable)) {
+    Status = InitializePciHost (
+      PCIE2X1_APB,
+      PCIE2X1_DBI_BASE,
+      PCIE2X1_SEGMENT,
+      PCIE2X1_S_BASE,
+      FixedPcdGet32 (PciHostBridge2x1NumLanes),
+      FixedPcdGet32 (PciHostBridge2x1LinkSpeed),
+      FixedPcdGet32 (PciHostBridge2x1PowerGpioBank),
+      FixedPcdGet32 (PciHostBridge2x1PowerGpioPin),
+      FixedPcdGet32 (PciHostBridge2x1ResetGpioBank),
+      FixedPcdGet32 (PciHostBridge2x1ResetGpioPin)
+    );
+    if (EFI_ERROR (Status)) {
+      DEBUG((EFI_D_ERROR, "Failed to initialize PciHost 2x1\n"));
+      *Count = 0;
+      return NULL;
+    }
   }
 
-  Status = InitializePciHost (
-    PCIE3X1_APB,
-    PCIE3X1_DBI,
-    PCIE3X1_SEGMENT,
-    PCIE3X1_S,
-    1, 3,
-    0xFFU, 0, /* always powered on */
-    0, 0
-  );
-  if (EFI_ERROR (Status)) {
-    *Count = 0;
-    return NULL;
+  if (FixedPcdGet32 (PciHostBridge3x1Enable)) {
+    Status = InitializePciHost (
+      PCIE3X1_APB,
+      PCIE3X1_DBI_BASE,
+      PCIE3X1_SEGMENT,
+      PCIE3X1_S_BASE,
+      FixedPcdGet32 (PciHostBridge3x1NumLanes),
+      FixedPcdGet32 (PciHostBridge3x1LinkSpeed),
+      FixedPcdGet32 (PciHostBridge3x1PowerGpioBank),
+      FixedPcdGet32 (PciHostBridge3x1PowerGpioPin),
+      FixedPcdGet32 (PciHostBridge3x1ResetGpioBank),
+      FixedPcdGet32 (PciHostBridge3x1ResetGpioPin)
+    );
+    if (EFI_ERROR (Status)) {
+      DEBUG((EFI_D_ERROR, "Failed to initialize PciHost 3x1\n"));
+      *Count = 0;
+      return NULL;
+    }
   }
 
-  Status = InitializePciHost (
-    PCIE3X2_APB,
-    PCIE3X2_DBI,
-    PCIE3X2_SEGMENT,
-    PCIE3X2_S,
-    2, 3,
-    0xFFU, 0, /* always powered on */
-    0, 14
-  );
-  if (EFI_ERROR (Status)) {
-    *Count = 0;
-    return NULL;
+  if (FixedPcdGet32 (PciHostBridge3x2Enable)) {
+    Status = InitializePciHost (
+      PCIE3X2_APB,
+      PCIE3X2_DBI_BASE,
+      PCIE3X2_SEGMENT,
+      PCIE3X2_S_BASE,
+      FixedPcdGet32 (PciHostBridge3x2NumLanes),
+      FixedPcdGet32 (PciHostBridge3x2LinkSpeed),
+      FixedPcdGet32 (PciHostBridge3x2PowerGpioBank),
+      FixedPcdGet32 (PciHostBridge3x2PowerGpioPin),
+      FixedPcdGet32 (PciHostBridge3x2ResetGpioBank),
+      FixedPcdGet32 (PciHostBridge3x2ResetGpioPin)
+    );
+    if (EFI_ERROR (Status)) {
+      DEBUG((EFI_D_ERROR, "Failed to initialize PciHost 3x2\n"));
+      *Count = 0;
+      return NULL;
+    }
   }
 
+  *Count = FixedPcdGet32 (PciHostBridgeCount);
 
-  *Count = 3;
   RootBridge = AllocateZeroPool (*Count * sizeof(PCI_ROOT_BRIDGE));
 
-  RootBridge[0].Segment     = PCIE2X1_SEGMENT;
+  for(UINTN i=0; i < *Count; i++) {
 
-  RootBridge[0].Supports    = EFI_PCI_ATTRIBUTE_IDE_PRIMARY_IO |
-                            EFI_PCI_ATTRIBUTE_IDE_SECONDARY_IO |
-                            EFI_PCI_ATTRIBUTE_ISA_IO_16 |
-                            EFI_PCI_ATTRIBUTE_ISA_MOTHERBOARD_IO | \
-                            EFI_PCI_ATTRIBUTE_VGA_MEMORY | \
-                            EFI_PCI_ATTRIBUTE_VGA_IO_16  | \
-                            EFI_PCI_ATTRIBUTE_VGA_PALETTE_IO_16;
-  RootBridge[0].Attributes  = RootBridge[0].Supports;
+    PCI_ROOT_BRIDGE *bridge = &RootBridge[i];
 
-  RootBridge[0].DmaAbove4G            = TRUE;
-  RootBridge[0].ResourceAssigned      = FALSE;
-  RootBridge[0].NoExtendedConfigSpace = FALSE;
+    CopyMem (bridge, &mRootBridgeTemplate, sizeof(PCI_ROOT_BRIDGE));
 
-  RootBridge[0].AllocationAttributes  = EFI_PCI_HOST_BRIDGE_COMBINE_MEM_PMEM |
-                                      EFI_PCI_HOST_BRIDGE_MEM64_DECODE;
+    bridge->DevicePath = (EFI_DEVICE_PATH_PROTOCOL *)AllocateZeroPool
+        (sizeof(EFI_PCI_ROOT_BRIDGE_DEVICE_PATH));
+    CopyMem (bridge->DevicePath, &mDevicePathTemplate, sizeof(mDevicePathTemplate));
+    ((EFI_PCI_ROOT_BRIDGE_DEVICE_PATH*)bridge->DevicePath)->AcpiDevicePath.UID = i;
 
-  RootBridge[0].Bus.Base              = 0;
-  RootBridge[0].Bus.Limit             = 1;
-  RootBridge[0].Io.Base               = 0x0000;
-  RootBridge[0].Io.Limit              = 0x0000 + 0x10000 - 1;
-  RootBridge[0].Io.Translation        = MAX_UINT64 - 0x00000003BFFF0000 + 1;
-  RootBridge[0].Mem.Base              = 0xF0000000;
-  RootBridge[0].Mem.Limit             = 0xF0000000 + 0x02000000 - 1;
-
-  RootBridge[0].MemAbove4G.Base       = 0x0000000390000000;
-  RootBridge[0].MemAbove4G.Limit      = 0x0000000390000000 + 0x000000002FFF0000 - 1;
-
-  //
-  // No separate ranges for prefetchable and non-prefetchable BARs
-  //
-  RootBridge[0].PMem.Base             = MAX_UINT64;
-  RootBridge[0].PMem.Limit            = 0;
-  RootBridge[0].PMemAbove4G.Base      = MAX_UINT64;
-  RootBridge[0].PMemAbove4G.Limit     = 0;
-
-  RootBridge[0].DevicePath = (EFI_DEVICE_PATH_PROTOCOL *)&mEfiPciRootBridgeDevicePath[0];
-
-  RootBridge[1].Segment     = PCIE3X1_SEGMENT;
-
-  RootBridge[1].Supports    = EFI_PCI_ATTRIBUTE_IDE_PRIMARY_IO |
-                            EFI_PCI_ATTRIBUTE_IDE_SECONDARY_IO |
-                            EFI_PCI_ATTRIBUTE_ISA_IO_16 |
-                            EFI_PCI_ATTRIBUTE_ISA_MOTHERBOARD_IO | \
-                            EFI_PCI_ATTRIBUTE_VGA_MEMORY | \
-                            EFI_PCI_ATTRIBUTE_VGA_IO_16  | \
-                            EFI_PCI_ATTRIBUTE_VGA_PALETTE_IO_16;
-  RootBridge[1].Attributes  = RootBridge[1].Supports;
-
-  RootBridge[1].DmaAbove4G            = TRUE;
-  RootBridge[1].ResourceAssigned      = FALSE;
-  RootBridge[1].NoExtendedConfigSpace = FALSE;
-
-  RootBridge[1].AllocationAttributes  = EFI_PCI_HOST_BRIDGE_COMBINE_MEM_PMEM |
-                                      EFI_PCI_HOST_BRIDGE_MEM64_DECODE;
-
-  RootBridge[1].Bus.Base              = 0;
-  RootBridge[1].Bus.Limit             = 1;
-  RootBridge[1].Io.Base               = 0x0000;
-  RootBridge[1].Io.Limit              = 0x0000 + 0x10000 - 1;
-  RootBridge[1].Io.Translation        = MAX_UINT64 - 0x00000003BFFF0000 + 1;
-  RootBridge[1].Mem.Base              = 0xF0000000;
-  RootBridge[1].Mem.Limit             = 0xF0000000 + 0x02000000 - 1;
-
-  RootBridge[1].MemAbove4G.Base       = 0x0000000390000000;
-  RootBridge[1].MemAbove4G.Limit      = 0x0000000390000000 + 0x000000002FFF0000 - 1;
-
-  //
-  // No separate ranges for prefetchable and non-prefetchable BARs
-  //
-  RootBridge[1].PMem.Base             = MAX_UINT64;
-  RootBridge[1].PMem.Limit            = 0;
-  RootBridge[1].PMemAbove4G.Base      = MAX_UINT64;
-  RootBridge[1].PMemAbove4G.Limit     = 0;
-
-  RootBridge[1].DevicePath = (EFI_DEVICE_PATH_PROTOCOL *)&mEfiPciRootBridgeDevicePath[1];
-
-
-  RootBridge[2].Segment     = PCIE3X2_SEGMENT;
-
-  RootBridge[2].Supports    = EFI_PCI_ATTRIBUTE_IDE_PRIMARY_IO |
-                            EFI_PCI_ATTRIBUTE_IDE_SECONDARY_IO |
-                            EFI_PCI_ATTRIBUTE_ISA_IO_16 |
-                            EFI_PCI_ATTRIBUTE_ISA_MOTHERBOARD_IO | \
-                            EFI_PCI_ATTRIBUTE_VGA_MEMORY | \
-                            EFI_PCI_ATTRIBUTE_VGA_IO_16  | \
-                            EFI_PCI_ATTRIBUTE_VGA_PALETTE_IO_16;
-  RootBridge[2].Attributes  = RootBridge[2].Supports;
-
-  RootBridge[2].DmaAbove4G            = TRUE;
-  RootBridge[2].ResourceAssigned      = FALSE;
-  RootBridge[2].NoExtendedConfigSpace = FALSE;
-
-  RootBridge[2].AllocationAttributes  = EFI_PCI_HOST_BRIDGE_COMBINE_MEM_PMEM |
-                                      EFI_PCI_HOST_BRIDGE_MEM64_DECODE;
-
-  RootBridge[2].Bus.Base              = 0;
-  RootBridge[2].Bus.Limit             = 1;
-  RootBridge[2].Io.Base               = 0x0000;
-  RootBridge[2].Io.Limit              = 0x0000 + 0x10000 - 1;
-  RootBridge[2].Io.Translation        = MAX_UINT64 - 0x00000003BFFF0000 + 1;
-  RootBridge[2].Mem.Base              = 0xF0000000;
-  RootBridge[2].Mem.Limit             = 0xF0000000 + 0x02000000 - 1;
-
-  RootBridge[2].MemAbove4G.Base       = 0x0000000390000000;
-  RootBridge[2].MemAbove4G.Limit      = 0x0000000390000000 + 0x000000002FFF0000 - 1;
-
-  //
-  // No separate ranges for prefetchable and non-prefetchable BARs
-  //
-  RootBridge[2].PMem.Base             = MAX_UINT64;
-  RootBridge[2].PMem.Limit            = 0;
-  RootBridge[2].PMemAbove4G.Base      = MAX_UINT64;
-  RootBridge[2].PMemAbove4G.Limit     = 0;
-
-  RootBridge[2].DevicePath = (EFI_DEVICE_PATH_PROTOCOL *)&mEfiPciRootBridgeDevicePath[2];
+    if (!Config[0] && FixedPcdGet32 (PciHostBridge2x1Enable)) {
+      Config[0] = 1;
+      bridge->Segment = PCIE2X1_SEGMENT;
+      continue;
+    }
+    if (!Config[1] && FixedPcdGet32 (PciHostBridge3x1Enable)) {
+      Config[1] = 1;
+      bridge->Segment = PCIE3X1_SEGMENT;
+      continue;
+    }
+    if (!Config[2] && FixedPcdGet32 (PciHostBridge3x2Enable)) {
+      Config[2] = 1;
+      bridge->Segment = PCIE3X2_SEGMENT;
+    }
+  }
 
   return RootBridge;
 }
@@ -303,6 +233,9 @@ PciHostBridgeFreeRootBridges (
   UINTN           Count
   )
 {
+  for (UINTN i=0; i < Count; i++) {
+    FreePool (Bridges[i].DevicePath);
+  }
   FreePool (Bridges);
 }
 

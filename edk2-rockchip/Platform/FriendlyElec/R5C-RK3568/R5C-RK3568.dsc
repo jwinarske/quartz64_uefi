@@ -474,10 +474,6 @@
   #
   # PCI support
   #
-  gRk356xTokenSpaceGuid.PcdPcieApbBase|0xFE280000
-  gRk356xTokenSpaceGuid.PcdPcieDbiBase|0x00000003C0800000
-
-  gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress|0x0000000380000000
   gArmTokenSpaceGuid.PcdPciBusMin|0
   gArmTokenSpaceGuid.PcdPciBusMax|1
   gArmTokenSpaceGuid.PcdPciMmio32Base|0xF0000000
@@ -486,15 +482,19 @@
   gArmTokenSpaceGuid.PcdPciMmio64Size|0x000000002FFF0000
   gArmTokenSpaceGuid.PcdPciIoBase|0x0000
   gArmTokenSpaceGuid.PcdPciIoSize|0x10000
-  gEmbeddedTokenSpaceGuid.PcdPrePiCpuIoSize|34
-
   gEfiMdePkgTokenSpaceGuid.PcdPciIoTranslation|0x00000003BFFF0000
-  gRk356xTokenSpaceGuid.PcdPcieResetGpioBank|2
-  gRk356xTokenSpaceGuid.PcdPcieResetGpioPin|30
-  gRk356xTokenSpaceGuid.PcdPciePowerGpioBank|0
-  gRk356xTokenSpaceGuid.PcdPciePowerGpioPin|28
-  gRk356xTokenSpaceGuid.PcdPcieLinkSpeed|0x3
-  gRk356xTokenSpaceGuid.PcdPcieNumLanes|0x2
+  gRk356xTokenSpaceGuid.PciHostBridge2x1PowerGpioBank|0xFF
+  gRk356xTokenSpaceGuid.PciHostBridge2x1PowerGpioPin|0
+  gRk356xTokenSpaceGuid.PciHostBridge2x1ResetGpioBank|3
+  gRk356xTokenSpaceGuid.PciHostBridge2x1ResetGpioPin|7
+  gRk356xTokenSpaceGuid.PciHostBridge3x1PowerGpioBank|0xFF
+  gRk356xTokenSpaceGuid.PciHostBridge3x1PowerGpioPin|0
+  gRk356xTokenSpaceGuid.PciHostBridge3x1ResetGpioBank|0
+  gRk356xTokenSpaceGuid.PciHostBridge3x1ResetGpioPin|0
+  gRk356xTokenSpaceGuid.PciHostBridge3x2PowerGpioBank|0xFF
+  gRk356xTokenSpaceGuid.PciHostBridge3x2PowerGpioPin|0
+  gRk356xTokenSpaceGuid.PciHostBridge3x2ResetGpioBank|0
+  gRk356xTokenSpaceGuid.PciHostBridge3x2ResetGpioPin|14
   gRk356xTokenSpaceGuid.PcdPcie30PhyLane0LinkNum|1
   gRk356xTokenSpaceGuid.PcdPcie30PhyLane1LinkNum|1
 
